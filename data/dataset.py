@@ -22,8 +22,17 @@ import torch
 import math
 import h5py
 from tokenizers import Tokenizer
-from typing import Union, List
 import numpy as np
+from typing import Callable, Dict, List, Sequence, Union
+import torch
+from lhotse import validate
+from lhotse.cut import CutSet
+from lhotse.dataset.collation import collate_audio
+from lhotse.dataset.input_strategies import BatchIO, PrecomputedFeatures
+from lhotse.utils import ifnone
+
+from data.collation import TextTokenCollater,get_text_token_collater
+from utils.g2p import PhonemeBpeTokenizer
 from tqdm import tqdm
 
 _pad        = '_'
@@ -31,11 +40,25 @@ _punctuation = ',.!?-~…'
 _letters = 'NQabdefghijklmnopstuvwxyzɑæʃʑçɯɪɔɛɹðəɫɥɸʊɾʒθβŋɦ⁼ʰ`^#*=ˈˌ→↓↑ '
 symbols = [_pad] + list(_punctuation) + list(_letters)
 
+language_name_dict = {
+    'Englise': 'en',
+    'Chinese': 'zh',
+    'ja': 'ja',
+}
 language_dict = {
     'en': 0,
     'zh': 1,
     'ja': 2,
 }
+lang2token = {
+    'zh': "[ZH]",
+    'ja': "[JA]",
+    "en": "[EN]",
+    'mix': "",
+}
+
+
+text_tokenizer = PhonemeBpeTokenizer(tokenizer_path="./utils/g2p/bpe_69.json")
 def seq2phone(tokens: Union[List, np.ndarray]):
     """
     Convert tokenized phoneme ID sequence back to phoneme string
@@ -44,6 +67,120 @@ def seq2phone(tokens: Union[List, np.ndarray]):
     """
     phones = "".join([symbols[i] for i in tokens])
     return phones
+
+
+
+class SpeechSynthesisDataset(torch.utils.data.Dataset):
+    """
+    The PyTorch Dataset for the speech synthesis(e.g. TTS) task.
+    Each item in this dataset is a dict of:
+
+    .. code-block::
+
+        {
+            'audio': (B x NumSamples) float tensor
+            'audio_lens': (B, ) int tensor
+            'text': str
+            'audio_features': (B x NumFrames x NumFeatures) float tensor
+            'audio_features_lens': (B, ) int tensor
+            'text_tokens': (B x NumTextTokens) long tensor
+            'text_tokens_lens': (B, ) int tensor
+        }
+    """
+
+    def __init__(
+        self,
+        text_token_collater: TextTokenCollater,
+        cut_transforms: List[Callable[[CutSet], CutSet]] = None,
+        feature_input_strategy: BatchIO = PrecomputedFeatures(),
+        feature_transforms: Union[Sequence[Callable], Callable] = None,
+    ) -> None:
+        super().__init__()
+
+        self.text_token_collater = text_token_collater
+        self.cut_transforms = ifnone(cut_transforms, [])
+        self.feature_input_strategy = feature_input_strategy
+
+        if feature_transforms is None:
+            feature_transforms = []
+        elif not isinstance(feature_transforms, Sequence):
+            feature_transforms = [feature_transforms]
+
+        assert all(
+            isinstance(transform, Callable) for transform in feature_transforms
+        ), "Feature transforms must be Callable"
+        self.feature_transforms = feature_transforms
+
+    def __getitem__(self, cuts: CutSet) -> Dict[str, torch.Tensor]:
+        global text_tokenizer
+        validate_for_tts(cuts)
+
+        for transform in self.cut_transforms:
+            cuts = transform(cuts)
+
+        if False:  # not used
+            audio, audio_lens = collate_audio(cuts)
+        else:  # for sharing tokenized features in different machines
+            audio, audio_lens = None, None
+
+        audio_features, audio_features_lens = self.feature_input_strategy(cuts)
+
+        for transform in self.feature_transforms:
+            audio_features = transform(audio_features)
+
+        datas = []
+
+        # language_id = []
+        token_infos = []
+        phone_tokens_all = []
+        for cut in cuts:
+            text = cut.supervisions[0].text
+            language = language_name_dict[cut.supervisions[0].language]
+            lang_token = lang2token[language]
+            text = lang_token + text + lang_token
+            phone_tokens, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
+            phone_tokens_all.append(phone_tokens)
+            # t_tokens, t_tokens_lens = self.text_token_collater(
+            #     [phone_tokens]
+            # )
+            # language_id += [language_dict[lang] for lang in langs]
+            # token_infos = (t_tokens, t_tokens_lens)
+
+        text_tokens, text_tokens_lens = self.text_token_collater(
+            phone_tokens_all
+        )
+        # for (t_tokens, t_tokens_lens) in token_infos:
+        #     if text_tokens != None:
+        #         text_tokens += t_tokens
+        #     else:
+        #         text_tokens = t_tokens
+        #     if text_tokens_lens != None:
+        #         text_tokens_lens += t_tokens_lens
+        #     else:
+        #         text_tokens_lens = t_tokens_lens
+
+        language_id = np.array([language_dict[language_name_dict[cut.supervisions[0].language]] for cut in cuts])
+        return {
+            "utt_id": [cut.id for cut in cuts],
+            "text": [cut.supervisions[0].text for cut in cuts],
+            "audio": audio,
+            "audio_lens": audio_lens,
+            "audio_features": audio_features,
+            "audio_features_lens": audio_features_lens,
+            "text_tokens": text_tokens,
+            "text_tokens_lens": text_tokens_lens,
+            "language": torch.LongTensor(language_id),
+        }
+
+
+def validate_for_tts(cuts: CutSet) -> None:
+    validate(cuts)
+    for cut in cuts:
+        assert (
+            len(cut.supervisions) == 1
+        ), "Only the Cuts with single supervision are supported."
+
+
 
 class DynamicBatchSampler(torch.utils.data.Sampler):
     def __init__(self, sampler, num_tokens_fn, num_buckets=100, min_size=0, max_size=1000,

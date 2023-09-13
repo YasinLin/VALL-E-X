@@ -98,7 +98,8 @@ class TextTokenCollater:
 
         tokens_batch = torch.from_numpy(
             np.array(
-                [seq for seq in seqs],
+                [[token if token != self.pad_symbol else self.token2idx[token] for token in seq] for seq in seqs],
+                # [[self.token2idx[token] for token in seq] for seq in seqs],
                 dtype=np.int64,
             )
         )
@@ -113,8 +114,23 @@ class TextTokenCollater:
         return tokens_batch, tokens_lens
 
 
-def get_text_token_collater() -> TextTokenCollater:
-    collater = TextTokenCollater(
-        ['0'], add_bos=False, add_eos=False
-    )
-    return collater
+# def get_text_token_collater() -> TextTokenCollater:
+#     collater = TextTokenCollater(
+#         ['0'], add_bos=False, add_eos=False
+#     )
+#     return collater
+
+#
+def get_text_token_collater(text_tokens_file: str=None) -> TextTokenCollater:
+    # if text_tokens_file == None:
+        collater = TextTokenCollater(
+                ['0'], add_bos=False, add_eos=False
+            )
+        return collater
+
+    # text_tokens_path = Path(text_tokens_file)
+    # unique_tokens = SymbolTable.from_file(text_tokens_path)
+    # collater = TextTokenCollater(
+    #     unique_tokens.symbols, add_bos=True, add_eos=True
+    # )
+    # return collater

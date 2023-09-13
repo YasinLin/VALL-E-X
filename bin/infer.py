@@ -35,14 +35,14 @@ import torch
 import torchaudio
 from icefall.utils import AttributeDict, str2bool
 
-from valle.data import (
+from data import (
     AudioTokenizer,
     TextTokenizer,
     tokenize_audio,
     tokenize_text,
 )
-from valle.data.collation import get_text_token_collater
-from valle.models import get_model
+from data.collation import get_text_token_collater
+from models import get_model
 
 
 def get_args():
@@ -255,6 +255,8 @@ def main():
                 enroll_x_lens=enroll_x_lens,
                 top_k=args.top_k,
                 temperature=args.temperature,
+                prompt_language="zh",
+                text_language="zh"
             )
 
         if audio_prompts != []:

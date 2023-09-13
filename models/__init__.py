@@ -1,6 +1,7 @@
 import argparse
 
 import torch.nn as nn
+from icefall.utils import str2bool
 # from icefall.utils import AttributeDict, str2bool
 
 from .macros import (
@@ -48,13 +49,13 @@ def add_model_arguments(parser: argparse.ArgumentParser):
     )
     parser.add_argument(
         "--norm-first",
-        type=bool,
+        type=str2bool,
         default=True,
         help="Pre or Post Normalization.",
     )
     parser.add_argument(
         "--add-prenet",
-        type=bool,
+        type=str2bool,
         default=False,
         help="Whether add PreNet after Inputs.",
     )
@@ -69,14 +70,14 @@ def add_model_arguments(parser: argparse.ArgumentParser):
     )
     parser.add_argument(
         "--share-embedding",
-        type=bool,
+        type=str2bool,
         default=True,
         help="Share the parameters of the output projection layer with the parameters of the acoustic embedding.",
     )
     parser.add_argument(
         "--prepend-bos",
-        type=bool,
-        default=False,
+        type=str2bool,
+        default=True,
         help="Whether prepend <BOS> to the acoustic tokens -> AR Decoder inputs.",
     )
     parser.add_argument(

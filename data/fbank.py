@@ -20,8 +20,8 @@ from typing import Any, Dict, Optional, Union
 
 import numpy as np
 import torch
-# from lhotse.features.base import FeatureExtractor
-# from lhotse.utils import EPSILON, Seconds, compute_num_frames
+from lhotse.features.base import FeatureExtractor
+from lhotse.utils import EPSILON, Seconds, compute_num_frames
 from librosa.filters import mel as librosa_mel_fn
 
 

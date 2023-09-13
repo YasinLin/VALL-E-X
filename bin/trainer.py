@@ -62,10 +62,10 @@ from torch.cuda.amp import GradScaler
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
-from valle.data import TtsDataModule
-from valle.models import add_model_arguments, get_model
-from valle.modules.optim import Eden, Eve, ScaledAdam
-from valle.modules.scheduler import get_scheduler
+from data import TtsDataModule
+from models import add_model_arguments, get_model
+from modules.optim import Eden, Eve, ScaledAdam
+from modules.scheduler import get_scheduler
 
 LRSchedulerType = torch.optim.lr_scheduler._LRScheduler
 
@@ -272,6 +272,7 @@ def get_parser():
         help="perform OOM check on dataloader batches before starting training.",
     )
 
+
     add_model_arguments(parser)
 
     return parser
@@ -378,6 +379,7 @@ def load_checkpoint_if_available(
         model_avg=model_avg,
         optimizer=optimizer,
         scheduler=scheduler,
+        strict=True,
     )
 
     saved_stage = saved_params.get("train_stage", 0)
@@ -520,13 +522,14 @@ def compute_loss(
     audio_features = batch["audio_features"].to(device)
     audio_features_lens = batch["audio_features_lens"].to(device)
     assert audio_features.ndim == 3
-
+    language_id = batch["language"].to(device)
     with torch.set_grad_enabled(is_training):
         predicts, loss, metrics = model(
             x=text_tokens,
             x_lens=text_tokens_lens,
             y=audio_features,
             y_lens=audio_features_lens,
+            language_id=language_id,
             train_stage=params.train_stage,
         )
 
@@ -887,6 +890,7 @@ def run(rank, world_size, args):
         torch.backends.cuda.matmul.allow_tf32 = True
 
     logging.info(f"Device: {device}")
+    print("add_prenet",params.add_prenet)
     logging.info(params)
 
     logging.info("About to create model")
@@ -977,7 +981,7 @@ def run(rank, world_size, args):
     scheduler = get_scheduler(params, optimizer)
     optimizer.zero_grad()
 
-    if checkpoints and "optimizer" in checkpoints:
+    if checkpoints and "optimizer" in checkpoints and checkpoints['optimizer']:
         logging.info("Loading optimizer state dict")
         optimizer.load_state_dict(checkpoints["optimizer"])
 
@@ -1024,7 +1028,7 @@ def run(rank, world_size, args):
     scaler = GradScaler(
         enabled=(params.dtype in ["fp16", "float16"]), init_scale=1.0
     )
-    if checkpoints and "grad_scaler" in checkpoints:
+    if checkpoints and "grad_scaler" in checkpoints and checkpoints['grad_scaler']:
         logging.info("Loading grad scaler state dict")
         scaler.load_state_dict(checkpoints["grad_scaler"])
 
