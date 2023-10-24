@@ -68,7 +68,7 @@ def preload_models():
         NUM_HEAD,
         NUM_LAYERS,
         norm_first=True,
-        add_prenet=True,
+        add_prenet=False,
         prefix_mode=PREFIX_MODE,
         share_embedding=True,
         nar_scale_factor=1.0,

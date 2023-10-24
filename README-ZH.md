@@ -1,3 +1,5 @@
+# 数据集的结构不一样，没有办法精调，除非拿到vallex的数据集结构
+
 # VALL-E X: 多语言文本到语音合成与语音克隆 🔊
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/qCBRmAnTxg)
 <br>

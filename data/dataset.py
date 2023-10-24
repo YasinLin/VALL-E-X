@@ -134,12 +134,17 @@ class SpeechSynthesisDataset(torch.utils.data.Dataset):
         token_infos = []
         phone_tokens_all = []
         for cut in cuts:
-            text = cut.supervisions[0].text
-            language = language_name_dict[cut.supervisions[0].language]
-            lang_token = lang2token[language]
-            text = lang_token + text + lang_token
-            phone_tokens, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
+            phone_tokens = cut.supervisions[0].custom["tokens"]['text']
             phone_tokens_all.append(phone_tokens)
+            
+            # text = cut.supervisions[0].text
+            # language = language_name_dict[cut.supervisions[0].language]
+            # lang_token = lang2token[language]
+            # text = lang_token + text + lang_token
+            # phone_tokens, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
+            # phone_tokens_all.append(phone_tokens)
+            
+            
             # t_tokens, t_tokens_lens = self.text_token_collater(
             #     [phone_tokens]
             # )

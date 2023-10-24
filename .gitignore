@@ -3,4 +3,8 @@ egs
 **/.ipynb_checkpoints
 **/__pycache__
 __pycache__
+utils/g2p/__pycache__
 .ipynb_checkpoints
+bert
+test.*
+whisper

@@ -383,6 +383,7 @@ def load_checkpoint_if_available(
     )
 
     saved_stage = saved_params.get("train_stage", 0)
+    print(params.train_stage, saved_stage)
     if params.train_stage != saved_stage:
         # switch training stage
         if params.train_stage and saved_stage:  # switch between 1 and 2
@@ -432,6 +433,8 @@ def load_checkpoint_if_available(
             if "cur_epoch" in saved_params:
                 params["start_epoch"] = saved_params["cur_epoch"]
 
+    
+                
     return saved_params
 
 
@@ -864,6 +867,8 @@ def run(rank, world_size, args):
     params = get_params()
     params.update(vars(args))
 
+    parameters_to_freeze = []
+
     fix_random_seed(params.seed)
     rng = random.Random(params.seed)
     if world_size > 1:
@@ -912,6 +917,12 @@ def run(rank, world_size, args):
     checkpoints = load_checkpoint_if_available(
         params=params, model=model, model_avg=model_avg
     )
+
+    # 冻结需要冻结的参数
+    for name, param in model.named_parameters():
+        if name in parameters_to_freeze:
+            param.requires_grad = False
+
 
     model.to(device)
     if world_size > 1:

@@ -13,7 +13,7 @@ print(f"You are using Python version {platform.python_version()}")
 if(sys.version_info[0]<3 or sys.version_info[1]<7):
     print("The Python version is too low and may cause problems")
 
-if platform.system().lower() == 'windows':inference
+if platform.system().lower() == 'windows':
     temp = pathlib.PosixPath
     pathlib.PosixPath = pathlib.WindowsPath
 else:

@@ -20,8 +20,9 @@ stop_stage=4
 dl_dir=$PWD/egs/aishell1/download
 
 dataset_parts="-p train -p dev -p test"  # debug
+# dataset_parts="-p test" 
 
-text_extractor="pypinyin_initials_finals"
+text_extractor=""
 audio_extractor="Encodec"  # or Fbank
 audio_feats_dir=egs/aishell1/data/tokenized
 
@@ -69,14 +70,13 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ]; then
   mkdir -p ${audio_feats_dir}
   if [ ! -e ${audio_feats_dir}/.aishell.tokenize.done ]; then
     python3 bin/tokenizer.py --dataset-parts "${dataset_parts}" \
-        --text-extractor ${text_extractor} \
         --audio-extractor ${audio_extractor} \
         --batch-duration 400 \
         --prefix "aishell" \
         --src-dir "egs/aishell1/data/manifests" \
         --output-dir "${audio_feats_dir}"
   fi
-  touch ${audio_feats_dir}/.aishell.tokenize.done
+  # touch ${audio_feats_dir}/.aishell.tokenize.done
 fi
 
 if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
@@ -102,7 +102,7 @@ if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
       ${audio_feats_dir}/aishell_cuts_test.jsonl.gz \
       ${audio_feats_dir}/cuts_test.jsonl.gz
 
-    touch ${audio_feats_dir}/.aishell.train.done
+    # touch ${audio_feats_dir}/.aishell.train.done
   fi
 fi
 

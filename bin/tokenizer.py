@@ -40,8 +40,27 @@ from data import (
 )
 from data.fbank import get_fbank_extractor
 from utils import SymbolTable
+from utils.g2p import PhonemeBpeTokenizer
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+language_name_dict = {
+    'Englise': 'en',
+    'Chinese': 'zh',
+    'ja': 'ja',
+}
+
+language_dict = {
+    'en': 0,
+    'zh': 1,
+    'ja': 2,
+}
+lang2token = {
+    'zh': "[ZH]",
+    'ja': "[JA]",
+    "en": "[EN]",
+    'mix': "",
+}
 
 
 # Torch's multithreaded behavior needs to be disabled or
@@ -136,8 +155,10 @@ def main():
         types=["recordings", "supervisions", "cuts"],
     )
 
-    text_tokenizer = TextTokenizer(backend="espeak")
-    cn_text_tokenizer = TextTokenizer(backend="pypinyin_initials_finals")
+    # text_tokenizer = TextTokenizer(backend="espeak")
+    # text_tokenizer = TextTokenizer(backend="espeak")
+    text_tokenizer = PhonemeBpeTokenizer(tokenizer_path="./utils/g2p/bpe_69.json")
+    # cn_text_tokenizer = TextTokenizer(backend="pypinyin_initials_finals")
     # text_tokenizer = None
     # if args.text_extractor:
     #     text_tokenizer = TextTokenizer(backend=args.text_extractor)
@@ -152,8 +173,8 @@ def main():
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     unique_symbols = set()
-    num_jobs = 0
-    # num_jobs = min(32, os.cpu_count())
+    # num_jobs = 0
+    num_jobs = min(32, os.cpu_count())
     logging.info(f"dataset_parts: {dataset_parts} manifests {len(manifests)}")
 
     prefix = args.prefix
@@ -218,17 +239,24 @@ def main():
 
             for c in tqdm(cut_set):
                 lang = c.supervisions[0].language
-                if lang == 'English':
-                    phonemes = tokenize_text(
-                        text_tokenizer, text=c.supervisions[0].text
-                    )
-                elif lang == 'Chinese':
-                    phonemes = tokenize_text(
-                        cn_text_tokenizer, text=c.supervisions[0].text
-                    )
-                    c.supervisions[0].custom = {}
+                language = language_name_dict[lang]
+                lang_token = lang2token[language]
+                text = lang_token + "".join(c.supervisions[0].text.split(" ")) + lang_token
+                phonemes, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
+                # print(lang_token,text,phonemes)
+                
+                # phonemes,_ = cje_cleaners(c.supervisions[0].text)
+                # if lang == 'English':
+                #     phonemes = tokenize_text(
+                #         text_tokenizer, text=c.supervisions[0].text
+                #     )
+                # elif lang == 'Chinese':
+                # phonemes = tokenize_text(
+                #     text_tokenizer, text=c.supervisions[0].text
+                # )
+                c.supervisions[0].custom = {}
                 c.supervisions[0].custom["tokens"] = {"text": phonemes}
-                unique_symbols.update(phonemes)
+                # unique_symbols.update(phonemes)
 
             # # TextTokenizer
             # if args.text_extractor:
@@ -261,14 +289,14 @@ def main():
             cuts_filename = f"{prefix}cuts_{partition}.{args.suffix}"
             cut_set.to_file(f"{args.output_dir}/{cuts_filename}")
 
-    if args.text_extractor:
-        unique_phonemes = SymbolTable()
-        for s in sorted(list(unique_symbols)):
-            unique_phonemes.add(s)
-        logging.info(f"{len(unique_symbols)} unique phonemes: {unique_symbols}")
+#     if args.text_extractor:
+#         unique_phonemes = SymbolTable()
+#         for s in sorted(list(unique_symbols)):
+#             unique_phonemes.add(s)
+#         logging.info(f"{len(unique_symbols)} unique phonemes: {unique_symbols}")
 
-        unique_phonemes_file = f"{args.output_dir}/unique_text_tokens.k2symbols"
-        unique_phonemes.to_file(unique_phonemes_file)
+#         unique_phonemes_file = f"{args.output_dir}/unique_text_tokens.k2symbols"
+#         unique_phonemes.to_file(unique_phonemes_file)
 
 
 if __name__ == "__main__":
