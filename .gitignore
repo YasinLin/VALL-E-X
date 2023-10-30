@@ -8,3 +8,4 @@ utils/g2p/__pycache__
 bert
 test.*
 whisper
+icefall

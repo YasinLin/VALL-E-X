@@ -222,11 +222,11 @@ class AudioTokenizer:
         model.set_target_bandwidth(6.0)
         remove_encodec_weight_norm(model)
 
+        #device = torch.device("cpu")
         if not device:
             device = torch.device("cpu")
             if torch.cuda.is_available():
                 device = torch.device("cuda:0")
-
         self._device = device
 
         self.codec = model.to(device)
@@ -276,9 +276,9 @@ class AudioTokenExtractor(FeatureExtractor):
     name = "encodec"
     config_type = AudioTokenConfig
 
-    def __init__(self, config: Optional[Any] = None):
+    def __init__(self, config: Optional[Any] = None, device=None):
         super(AudioTokenExtractor, self).__init__(config)
-        self.tokenizer = AudioTokenizer()
+        self.tokenizer = AudioTokenizer(device)
 
     def extract(
         self, samples: Union[np.ndarray, torch.Tensor], sampling_rate: int

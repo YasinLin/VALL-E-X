@@ -124,12 +124,30 @@ def get_args():
         help="The maximum number of audio seconds in a batch."
         "Determines batch size dynamically.",
     )
+    
+    parser.add_argument(
+        "--num-jobs",
+        type=int,
+        default=0,
+        help=""
+        "",
+    )
 
+
+
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="",
+        help=""
+        "",
+    )
     return parser.parse_args()
 
 
 def main():
     args = get_args()
+    print(args)
 
     dataset_parts = args.dataset_parts.replace("--dataset-parts", "").strip()
     if dataset_parts == "all":  # LibriTTS
@@ -166,15 +184,15 @@ def main():
     audio_extractor = None
     if args.audio_extractor:
         if args.audio_extractor == "Encodec":
-            audio_extractor = AudioTokenExtractor(AudioTokenConfig())
+            audio_extractor = AudioTokenExtractor(AudioTokenConfig(), device=args.device)
         else:
             assert args.audio_extractor == "Fbank"
             audio_extractor = get_fbank_extractor()
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     unique_symbols = set()
-    # num_jobs = 0
-    num_jobs = min(32, os.cpu_count())
+    num_jobs = args.num_jobs
+    #num_jobs = min(32, os.cpu_count())
     logging.info(f"dataset_parts: {dataset_parts} manifests {len(manifests)}")
 
     prefix = args.prefix
@@ -204,7 +222,7 @@ def main():
                         f"{args.output_dir}/{args.prefix}_fbank_{partition}"
                     )
 
-                if args.prefix.lower() in ["ljspeech", "aishell", "baker"]:
+                if args.prefix.lower() in ["ljspeech", "aishell", "baker", "wenetspeech"]:
                     cut_set = cut_set.resample(24000)
                     # https://github.com/lifeiteng/vall-e/issues/90
                     # if args.prefix == "aishell":
