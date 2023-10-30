@@ -277,9 +277,9 @@ class AudioTokenExtractor(FeatureExtractor):
     name = "encodec"
     config_type = AudioTokenConfig
 
-    def __init__(self, config: Optional[Any] = None):
+    def __init__(self, config: Optional[Any] = None, device=None):
         super(AudioTokenExtractor, self).__init__(config)
-        self.tokenizer = AudioTokenizer()
+        self.tokenizer = AudioTokenizer(device)
 
     def extract(
         self, samples: Union[np.ndarray, torch.Tensor], sampling_rate: int
