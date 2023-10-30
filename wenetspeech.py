@@ -66,6 +66,7 @@ def prepare_wenet_speech(
              the keys 'recordings' and 'supervisions'.
     """
     corpus_dir = Path(corpus_dir)
+    resample_corpus_dir = Path(resample_corpus_dir)
     assert corpus_dir.is_dir(), f"No such directory: {corpus_dir}"
     if output_dir is not None:
         output_dir = Path(output_dir)
