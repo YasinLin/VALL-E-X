@@ -50,8 +50,8 @@ WETNET_SPEECH_PARTS = ("L", "M", "S", "DEV", "TEST_NET", "TEST_MEETING")
 
 def prepare_wenet_speech(
     corpus_dir: Pathlike,
-    dataset_parts: Union[str, Sequence[str]] = "all",
     resample_corpus_dir: Pathlike,
+    dataset_parts: Union[str, Sequence[str]] = "all",
     output_dir: Optional[Pathlike] = None,
     num_jobs: int = 1,
 ) -> Dict[str, Dict[str, Union[RecordingSet, SupervisionSet]]]:
@@ -225,4 +225,4 @@ if __name__ == "__main__":
     corpus_dir = Path("egs/wenet_speech/download/wenet_speech")
     output_dir = Path("egs/wenet_speech/data/manifests")
     resample_corpus_dir = Path("egs/wenet_speech/data/wav")
-    prepare_wenet_speech(corpus_dir, "all", resample_corpus_dir, output_dir)
+    prepare_wenet_speech(corpus_dir, resample_corpus_dir, "all", output_dir)
