@@ -275,9 +275,9 @@ def prepare_customize(
 
     if output_dir is not None:
         supervision_set.to_file(
-            output_dir / f"aishell_supervisions_train.jsonl.gz"
+            output_dir / f"customize_supervisions_train.jsonl.gz"
         )
-        recording_set.to_file(output_dir / f"aishell_recordings_train.jsonl.gz")
+        recording_set.to_file(output_dir / f"customize_recordings_train.jsonl.gz")
 
     manifests["train"] = {"recordings": recording_set, "supervisions": supervision_set}
 
@@ -285,7 +285,7 @@ def prepare_customize(
 
 
 if __name__ == "__main__":
-    corpus_dir = Path("egs/customize/download")
-    output_dir = Path("egs/customize/data")
+    corpus_dir = Path("egs/customize_new/download")
+    output_dir = Path("egs/customize_new/data")
     prepare_customize(corpus_dir, output_dir)
     # transcribe_one("egs/customize/download/audio/formated/xiongchao/1_vocals_mono_48k_1.wav")

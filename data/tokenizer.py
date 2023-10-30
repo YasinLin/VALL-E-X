@@ -222,10 +222,11 @@ class AudioTokenizer:
         model.set_target_bandwidth(6.0)
         remove_encodec_weight_norm(model)
 
+        #device = torch.device("cpu")
         if not device:
-            device = torch.device("cpu")
-            if torch.cuda.is_available():
-                device = torch.device("cuda:0")
+             device = torch.device("cpu")
+             if torch.cuda.is_available():
+                 device = torch.device("cuda:0")
 
         self._device = device
 

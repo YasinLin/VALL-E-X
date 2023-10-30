@@ -92,7 +92,7 @@ model = VALLE(
         nar_scale_factor=1.0,
         prepend_bos=True,
         num_quantizers=NUM_QUANTIZERS,
-    )
+    ).to(device)
 checkpoint = torch.load("./checkpoints/vallex-checkpoint.pt", map_location='cpu')
 missing_keys, unexpected_keys = model.load_state_dict(
     checkpoint["model"], strict=True

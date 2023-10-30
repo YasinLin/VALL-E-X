@@ -19,12 +19,12 @@ stop_stage=3
 
 dl_dir=$PWD/egs/wenet_speech/download
 
-dataset_parts="-p train -p dev -p test"  # debug
+dataset_parts="-pL -pM -pS -pDEV -pTEST_MEETING -pTEST_NET"  # debug
 # dataset_parts="-p test" 
 
 text_extractor=""
 audio_extractor="Encodec"  # or Fbank
-audio_feats_dir=egs/wenet_speech/data/tokenized
+audio_feats_dir="egs/wenet_speech/data/tokenized"
 
 . egs/wenet_speech/shared/parse_options.sh || exit 1
 
@@ -59,6 +59,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ]; then
     python3 bin/tokenizer.py --dataset-parts "${dataset_parts}" \
         --audio-extractor ${audio_extractor} \
         --batch-duration 400 \
+        --prefix wenetspeech\
         --src-dir "egs/wenet_speech/data/manifests" \
         --output-dir "${audio_feats_dir}"
   fi
@@ -71,19 +72,19 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ]; then
     if [ "${dataset_parts}" == "--dataset-parts all" ];then
       # train
       lhotse combine \
-        ${audio_feats_dir}/libritts_cuts_L.jsonl.gz \
-        ${audio_feats_dir}/libritts_cuts_M.jsonl.gz \
-        ${audio_feats_dir}/libritts_cuts_S.jsonl.gz \
+        ${audio_feats_dir}/wenetspeech_cuts_L.jsonl.gz \
+        ${audio_feats_dir}/wenetspeech_cuts_M.jsonl.gz \
+        ${audio_feats_dir}/wenetspeech_cuts_S.jsonl.gz \
         ${audio_feats_dir}/cuts_train.jsonl.gz
 
       # dev
       lhotse copy \
-        ${audio_feats_dir}/libritts_DEV.jsonl.gz \
+        ${audio_feats_dir}/wenetspeech_cuts_DEV.jsonl.gz \
         ${audio_feats_dir}/cuts_dev.jsonl.gz
     else  # debug
       # train
       lhotse copy \
-        ${audio_feats_dir}/libritts_cuts_DEV.jsonl.gz \
+        ${audio_feats_dir}/wenetspeech_cuts_DEV.jsonl.gz \
         ${audio_feats_dir}/cuts_train.jsonl.gz
       # dev
       lhotse subset --first 400 \

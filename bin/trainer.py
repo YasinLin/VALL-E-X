@@ -30,6 +30,7 @@ import argparse
 import copy
 import logging
 import os
+from glob import glob
 from contextlib import nullcontext
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -201,7 +202,7 @@ def get_parser():
     parser.add_argument(
         "--keep-last-k",
         type=int,
-        default=20,
+        default=3,
         help="""Only keep this number of checkpoints on disk.
         For instance, if it is 3, there are only 3 checkpoints
         in the exp-dir with filenames `checkpoint-xxx.pt`.
@@ -478,6 +479,16 @@ def save_checkpoint(
         scaler=scaler,
         rank=rank,
     )
+    # 获取所有符合特定格式的文件
+    files = glob(os.path.join(str(params.exp_dir
+                                 ), "epoch-*.pt"))
+
+    # 根据文件名称中的 epoch 进行排序
+    sorted_files = sorted(files, key=lambda x: int(x.split("-")[1].split(".")[0]))
+
+    # 删除超过4个的文件
+    for file in sorted_files[:-4]:
+        os.remove(file)
 
     if params.best_train_epoch == params.cur_epoch:
         best_train_filename = params.exp_dir / "best-train-loss.pt"

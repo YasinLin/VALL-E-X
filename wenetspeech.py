@@ -31,12 +31,27 @@ from lhotse.audio import AudioSource, Recording, RecordingSet
 from lhotse.supervision import SupervisionSegment, SupervisionSet
 from lhotse.utils import Pathlike, add_durations
 
+
+
+from denoiser import pretrained
+from denoiser.dsp import convert_audio
+import torchaudio
+import torch
+import soundfile
+import os
+import librosa
+import random
+# from tqdm import tqdm
+# from concurrent.futures import ThreadPoolExecutor, as_completed
+# from datetime import datetime, timedelta
+
 WETNET_SPEECH_PARTS = ("L", "M", "S", "DEV", "TEST_NET", "TEST_MEETING")
 
 
 def prepare_wenet_speech(
     corpus_dir: Pathlike,
     dataset_parts: Union[str, Sequence[str]] = "all",
+    resample_corpus_dir: Pathlike,
     output_dir: Optional[Pathlike] = None,
     num_jobs: int = 1,
 ) -> Dict[str, Dict[str, Union[RecordingSet, SupervisionSet]]]:
@@ -77,6 +92,7 @@ def prepare_wenet_speech(
                 parse_utterance,
                 raw_manifests["audios"],
                 repeat(corpus_dir),
+                repeat(resample_corpus_dir)
                 repeat(subsets),
             ),
             desc="Processing WenetSpeech JSON entries",
@@ -109,10 +125,67 @@ def prepare_wenet_speech(
     return manifests
 
 
+denoise_model = None
+
+def get_denoise_model(cpu=True):
+    global denoise_model
+    if not denoise_model:
+        if cpu:
+            denoise_model = pretrained.dns64().cpu()
+        else:
+            denoise_model = pretrained.dns64().cuda()
+    return denoise_model
+
+def denoisy(input, output, tsr, cpu=True):
+    wav, sr = torchaudio.load(input)
+    try:
+        wav, sr = denoisy_np(wav, sr, tsr, cpu)
+        soundfile.write(output, wav, sr)
+    except Exception as es:
+        print(es)
+        return False
+
+    return True
+    
+    
+
+def denoisy_np(wav, sr, tsr, cpu=True):
+    model = get_denoise_model(cpu)
+    if cpu:
+        wav=wav.cpu()
+    else:
+        wav=wav.cuda()
+    wav = convert_audio(wav, sr, model.sample_rate, model.chin)
+    with torch.no_grad():
+        denoised = model(wav[None])[0]
+        np_wav = denoised.data.cpu().numpy()
+        wav = librosa.resample(np_wav.reshape(-1), model.sample_rate, tsr)
+        return wav, tsr
+
+
+
+def resample(f, output_file):
+    denoisy(f, output_file, 24000, False)
+        
+
 def parse_utterance(
-    audio: Any, root_path: Path, subsets: Sequence
+    audio: Any, root_path: Path, resample_corpus_dir:Path, subsets: Sequence
 ) -> Tuple[Recording, Dict[str, List[SupervisionSegment]]]:
-    sampling_rate = 16000
+    sampling_rate = 24000
+    # 转成wav并去燥
+    f = root_path / audio["path"]
+    output_file = resample_corpus_dir / audio["path"]
+    
+    if not output_file.exists():
+        # 获取上级目录路径
+        parent_directory = output_file.parent
+
+        # 判断上级目录是否存在，如果不存在则创建它
+        if not parent_directory.exists():
+            parent_directory.mkdir(parents=True) 
+
+        denoisy(f, output_file, sampling_rate, False)
+    
     recording = Recording(
         id=audio["aid"],
         sources=[
@@ -151,4 +224,5 @@ def parse_utterance(
 if __name__ == "__main__":
     corpus_dir = Path("egs/wenet_speech/download/wenet_speech")
     output_dir = Path("egs/wenet_speech/data/manifests")
-    prepare_wenet_speech(corpus_dir, "all", output_dir)
+    resample_corpus_dir = Path("egs/wenet_speech/data/wav")
+    prepare_wenet_speech(corpus_dir, "all", resample_corpus_dir, output_dir)
