@@ -226,4 +226,4 @@ if __name__ == "__main__":
     corpus_dir = Path("egs/wenet_speech/download/wenet_speech")
     output_dir = Path("egs/wenet_speech/data/manifests")
     resample_corpus_dir = Path("egs/wenet_speech/data/wav")
-    prepare_wenet_speech(corpus_dir, resample_corpus_dir, "all", output_dir, num_jobs=0)
+    prepare_wenet_speech(corpus_dir, resample_corpus_dir, "all", output_dir, num_jobs=1)
