@@ -50,7 +50,7 @@ WETNET_SPEECH_PARTS = ("L", "M", "S", "DEV", "TEST_NET", "TEST_MEETING")
 
 def prepare_wenet_speech(
     corpus_dir: Pathlike,
-    resample_corpus_dir: Pathlike,
+    resample_corpus_dir: Optional[Pathlike] = None,
     dataset_parts: Union[str, Sequence[str]] = "all",
     output_dir: Optional[Pathlike] = None,
     num_jobs: int = 1,
@@ -171,7 +171,7 @@ def resample(f, output_file):
         
 
 def parse_utterance(
-    audio: Any, root_path: Path, resample_corpus_dir:Path, subsets: Sequence
+    audio: Any, root_path: Path, resample_corpus_dir:Optional[Pathlike] = None, subsets: Sequence
 ) -> Tuple[Recording, Dict[str, List[SupervisionSegment]]]:
     sampling_rate = 24000
     # 转成wav并去燥
