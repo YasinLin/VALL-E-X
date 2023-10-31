@@ -171,7 +171,7 @@ def resample(f, output_file):
         
 
 def parse_utterance(
-    audio: Any, root_path: Path, resample_corpus_dir:Optional[Pathlike] = None, subsets: Sequence
+    audio: Any, root_path: Path, resample_corpus_dir:Optional[Pathlike], subsets: Sequence
 ) -> Tuple[Recording, Dict[str, List[SupervisionSegment]]]:
     sampling_rate = 24000
     # 转成wav并去燥
