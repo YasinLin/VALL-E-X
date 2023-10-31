@@ -3,6 +3,7 @@ egs/**/download
 egs/**/data
 egs/**/data.*
 egs/**/exp
+**/log*
 **/.ipynb_checkpoints
 **/__pycache__
 __pycache__

@@ -22,6 +22,13 @@ from pathlib import Path
 import torch
 from lhotse import CutSet, KaldifeatFbank, KaldifeatFbankConfig, LilcomChunkyWriter
 
+from vallex.data import (
+    AudioTokenConfig,
+    AudioTokenExtractor,
+    TextTokenizer,
+    tokenize_text,
+)
+
 # Torch's multithreaded behavior needs to be disabled or
 # it wastes a lot of CPU and slow things down.
 # Do this outside of main() in case it needs to take effect
