@@ -1,5 +1,8 @@
 checkpoints
-egs
+egs/**/download
+egs/**/data
+egs/**/data.*
+egs/**/exp
 **/.ipynb_checkpoints
 **/__pycache__
 __pycache__
