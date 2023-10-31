@@ -71,6 +71,8 @@ def compute_fbank_wenetspeech_dev_test():
         cut_set = cut_set.trim_to_supervisions(
             keep_overlapping=False, min_duration=None
         )
+        
+        cut_set = cut_set.resample(24000)
 
         logging.info("Computing features")
         cut_set = cut_set.compute_and_store_features_batch(
