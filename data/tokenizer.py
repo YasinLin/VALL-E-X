@@ -229,6 +229,8 @@ class AudioTokenizer:
                  device = torch.device("cuda:0")
 
         self._device = device
+        
+        print(device)
 
         self.codec = model.to(device)
         self.sample_rate = model.sample_rate
