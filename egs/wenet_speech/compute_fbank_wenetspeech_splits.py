@@ -31,6 +31,14 @@ from lhotse import (
     set_caching_enabled,
 )
 
+
+from vallex.data import (
+    AudioTokenConfig,
+    AudioTokenExtractor,
+    TextTokenizer,
+    tokenize_text,
+)
+
 # Torch's multithreaded behavior needs to be disabled or
 # it wastes a lot of CPU and slow things down.
 # Do this outside of main() in case it needs to take effect
@@ -94,7 +102,7 @@ def compute_fbank_wenetspeech_splits(args):
     subset = args.training_subset
     subset = str(subset)
     num_splits = args.num_splits
-    output_dir = f"data/fbank/{subset}_split_{num_splits}"
+    output_dir = f"data/encodec/{subset}_split_{num_splits}"
     output_dir = Path(output_dir)
     assert output_dir.exists(), f"{output_dir} does not exist!"
 
@@ -110,7 +118,8 @@ def compute_fbank_wenetspeech_splits(args):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda", 0)
-    extractor = KaldifeatFbank(KaldifeatFbankConfig(device=device))
+    extractor = AudioTokenExtractor(AudioTokenConfig(), device=device)
+    #extractor = KaldifeatFbank(KaldifeatFbankConfig(device=device))
     logging.info(f"device: {device}")
 
     set_audio_duration_mismatch_tolerance(0.01)  # 10ms tolerance
