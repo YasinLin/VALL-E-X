@@ -16,16 +16,16 @@ else:
     pathlib.WindowsPath = pathlib.PosixPath
 
 import numpy as np
-from data.tokenizer import (
+from vallex.data.tokenizer import (
     AudioTokenizer,
     tokenize_audio,
 )
-from data.collation import get_text_token_collater
-from models.vallex import VALLE
-from utils.g2p import PhonemeBpeTokenizer
-from utils.sentence_cutter import split_text_into_sentences
+from vallex.data.collation import get_text_token_collater
+from vallex.models.vallex import VALLE
+from vallex.utils.g2p import PhonemeBpeTokenizer
+from vallex.utils.sentence_cutter import split_text_into_sentences
 
-from macros import *
+from vallex.macros import *
 
 device = torch.device("cpu")
 if torch.cuda.is_available():
