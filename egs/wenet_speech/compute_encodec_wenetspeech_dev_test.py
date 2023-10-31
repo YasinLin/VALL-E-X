@@ -74,13 +74,13 @@ def compute_fbank_wenetspeech_dev_test():
 
         logging.info("Computing features")
         cut_set = cut_set.compute_and_store_features_batch(
-            extractor=extractor,
-            storage_path=f"{in_out_dir}/feats_{partition}",
-            num_workers=num_workers,
-            batch_duration=batch_duration,
-            storage_type=LilcomChunkyWriter,
-            overwrite=True,
-        )
+                            extractor=extractor,
+                            storage_path=f"{in_out_dir}/feats_{partition}",
+                            num_workers=num_workers,
+                            batch_duration=batch_duration,
+                            storage_type=LilcomChunkyWriter,
+                            overwrite=True,
+                        )
 
         logging.info(f"Saving to {cuts_path}")
         cut_set.to_file(cuts_path)
