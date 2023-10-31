@@ -66,7 +66,8 @@ def prepare_wenet_speech(
              the keys 'recordings' and 'supervisions'.
     """
     corpus_dir = Path(corpus_dir)
-    resample_corpus_dir = Path(resample_corpus_dir)
+    if resample_corpus_dir:
+        resample_corpus_dir = Path(resample_corpus_dir)
     assert corpus_dir.is_dir(), f"No such directory: {corpus_dir}"
     if output_dir is not None:
         output_dir = Path(output_dir)
@@ -93,7 +94,7 @@ def prepare_wenet_speech(
                 parse_utterance,
                 raw_manifests["audios"],
                 repeat(corpus_dir),
-                repeat(resample_corpus_dir),
+                repeat(resample_corpus_dir) if resample_corpus_dir else None,
                 repeat(subsets),
             ),
             desc="Processing WenetSpeech JSON entries",
@@ -175,17 +176,19 @@ def parse_utterance(
     sampling_rate = 24000
     # 转成wav并去燥
     f = root_path / audio["path"]
-    output_file = resample_corpus_dir / audio["path"]
-    
-    if not output_file.exists():
-        # 获取上级目录路径
-        parent_directory = output_file.parent
+    if resample_corpus_dir:
+        output_file = resample_corpus_dir / audio["path"]
+        if not output_file.exists():
+            # 获取上级目录路径
+            parent_directory = output_file.parent
 
-        # 判断上级目录是否存在，如果不存在则创建它
-        if not parent_directory.exists():
-            parent_directory.mkdir(parents=True) 
+            # 判断上级目录是否存在，如果不存在则创建它
+            if not parent_directory.exists():
+                parent_directory.mkdir(parents=True) 
 
-        denoisy(f, output_file, sampling_rate, False)
+            denoisy(f, output_file, sampling_rate, False)
+            
+            f = output_file
     
     recording = Recording(
         id=audio["aid"],
@@ -193,7 +196,7 @@ def parse_utterance(
             AudioSource(
                 type="file",
                 channels=[0],
-                source=str(root_path / audio["path"]),
+                source=str(f),
             )
         ],
         num_samples=compute_num_samples(
@@ -223,7 +226,7 @@ def parse_utterance(
 
 
 if __name__ == "__main__":
-    corpus_dir = Path("egs/wenet_speech/download/wenet_speech")
-    output_dir = Path("egs/wenet_speech/data/manifests")
-    resample_corpus_dir = Path("egs/wenet_speech/data/wav")
-    prepare_wenet_speech(corpus_dir, resample_corpus_dir, "all", output_dir, num_jobs=1)
+    corpus_dir = Path("/data/VALL-E-X/egs/wenet_speech/download/wenet_speech")
+    output_dir = Path("/data/VALL-E-X/egs/wenet_speech/data/manifests")
+    # resample_corpus_dir = Path("egs/wenet_speech/data/wav")
+    prepare_wenet_speech(corpus_dir, None, "all", output_dir, num_jobs=1)

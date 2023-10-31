@@ -41,7 +41,7 @@ torch.multiprocessing.set_sharing_strategy("file_system")
 def compute_fbank_wenetspeech_dev_test():
     in_out_dir = Path("data/encodec")
     # number of workers in dataloader
-    num_workers = 42
+    num_workers = 4
 
     # number of seconds in a batch
     batch_duration = 600
