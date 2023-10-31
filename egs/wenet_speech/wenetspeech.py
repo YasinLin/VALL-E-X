@@ -94,7 +94,7 @@ def prepare_wenet_speech(
                 parse_utterance,
                 raw_manifests["audios"],
                 repeat(corpus_dir),
-                repeat(resample_corpus_dir) if resample_corpus_dir else None,
+                repeat(resample_corpus_dir),
                 repeat(subsets),
             ),
             desc="Processing WenetSpeech JSON entries",
