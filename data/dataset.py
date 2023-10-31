@@ -31,8 +31,8 @@ from lhotse.dataset.collation import collate_audio
 from lhotse.dataset.input_strategies import BatchIO, PrecomputedFeatures
 from lhotse.utils import ifnone
 
-from data.collation import TextTokenCollater,get_text_token_collater
-from utils.g2p import PhonemeBpeTokenizer
+from vallex.data.collation import TextTokenCollater,get_text_token_collater
+from vallex.utils.g2p import PhonemeBpeTokenizer
 from tqdm import tqdm
 
 _pad        = '_'
