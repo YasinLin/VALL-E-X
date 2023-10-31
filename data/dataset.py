@@ -58,7 +58,7 @@ lang2token = {
 }
 
 
-text_tokenizer = PhonemeBpeTokenizer(tokenizer_path="./utils/g2p/bpe_69.json")
+text_tokenizer = PhonemeBpeTokenizer(tokenizer_path="./vallex/utils/g2p/bpe_69.json")
 def seq2phone(tokens: Union[List, np.ndarray]):
     """
     Convert tokenized phoneme ID sequence back to phoneme string
