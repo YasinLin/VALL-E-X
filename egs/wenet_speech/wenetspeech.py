@@ -99,6 +99,7 @@ def prepare_wenet_speech(
             ),
             desc="Processing WenetSpeech JSON entries",
         ):
+            print(recording.id)
             for part in segments:
                 manifests[part]["recordings"].append(recording)
                 manifests[part]["supervisions"].extend(segments[part])
